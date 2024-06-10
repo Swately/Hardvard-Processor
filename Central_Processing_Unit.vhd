@@ -94,9 +94,9 @@ begin
         reset      	=> reset,
         ready		=> internal_regfile_ready,
         reg_write  	=> internal_reg_write,
-        read_reg1  	=> internal_read_reg1,
-        read_reg2  	=> internal_read_reg2,
-        write_reg  	=> internal_write_reg,
+        read_reg1  	=> internal_src_reg,
+        read_reg2  	=> internal_trg_reg,
+        write_reg  	=> internal_des_reg,
         write_data 	=> internal_write_data,
         reg_data1  	=> internal_reg_data1,
         reg_data2  	=> internal_reg_data2
@@ -113,8 +113,8 @@ begin
 
     Arithmetic_Logic_Unit_inst: entity work.Arithmetic_Logic_Unit(A_Arithmetic_Logic_Unit)
     port map(
-        alu_source_a 	=> internal_alu_source_a,
-        alu_source_b 	=> internal_alu_source_b,
+        alu_source_a 	=> internal_reg_data1,
+        alu_source_b 	=> internal_reg_data2,
         alu_opcode 		=> internal_alu_opcode,
         result 			=> internal_result,
         result_low 		=> internal_result_low,
@@ -131,7 +131,7 @@ begin
         clk 					=> clk,
         reset 					=> reset,
         ready 					=> internal_ins_memory_ready,
-        instruction_address_in 	=> internal_instruction_address_in,
+        instruction_address_in 	=> internal_pc_address_out,
         instruction_address_out => internal_instruction_address_out
     );
 	
@@ -177,6 +177,13 @@ begin
 				end if;
 			else
 				internal_pc_address_in <= internal_pc_address_in;
+				
+				if internal_memto_reg = '1' then
+					internal_write_data <= internal_data_memory_out;
+				else
+					internal_write_data <= internal_result;
+				end if;
+				
 			end if;
         end if;
     end process;
@@ -184,7 +191,9 @@ begin
 	process(clk)
 	begin
 		if falling_edge(clk) then
-	
+			if	internal_data_memory_ready = '1' and internal_regfile_ready = '1' and internal_pc_ready = '1' and internal_ins_memory_ready = '1' and internal_cu_ready = '1' then
+				
+			end if;
 		end if;
 	end process;
 	

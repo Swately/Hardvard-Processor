@@ -15,9 +15,9 @@ architecture A_Instruction_Memory of Instruction_Memory is
 	type instruction_memory_type is array (0 to 255) of std_logic_vector(31 downto 0);
 	signal instruction_memory : instruction_memory_type := (
 		0 => "00001000000000000000000000000000",-- "000010 00000(SR) 00000(TR) 0000000000000000" LOAD Data_Memory 0 a registro 0 del banco de registros
-		0 => "00001000000000010000000000000101",-- "000010 00000(SR) 00001(TR) 0000000000000101" LOAD Data_Memory 5 a registro 1 del banco de registros
-		1 => "00010000000000000000000000000001",--ADD "000000(OP) 00000(SR) 00000(TR) 00000(DR) 00000(SA) 000000(FUNC)" registro 0 + 
-		2 => "00100100000000000000000000000000",--BNZ
+		1 => "00001000000000010000000000000101",-- "000010 00000(SR) 00001(TR) 0000000000000101" LOAD Data_Memory 5 a registro 1 del banco de registros
+		2 => "00000100000000010000000000000001",--SUB "000001(OP) 00000(SR) 00001(TR) 00000(DR) 00000(SA) 000001(FUNC)" registro 0 - registro 1
+		--3 => "00100000000000000000000000000010",--BNZ
 		3 => "00100100000000000000000000000000",--HALT
 		others => (others => '0')
 	);
