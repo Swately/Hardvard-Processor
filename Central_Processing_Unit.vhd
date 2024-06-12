@@ -64,6 +64,8 @@ architecture A_Central_Processing_Unit of Central_Processing_Unit is
 
 begin
 
+	internal_data_address_in <= "0000000000000000" & internal_immediate;
+
     Control_Unit_inst: entity work.Control_Unit(A_Control_Unit)
     port map(
         clk         	=> clk,
@@ -98,8 +100,8 @@ begin
         read_reg2  	=> internal_trg_reg,
         write_reg  	=> internal_des_reg,
         write_data 	=> internal_write_data,
-        reg_data1  	=> internal_reg_data1,
-        reg_data2  	=> internal_reg_data2
+        reg_data1  	=> internal_alu_source_a,
+        reg_data2  	=> internal_alu_source_b
     );
 	
     Program_Counter_inst: entity work.Program_Counter(A_Program_Counter)
@@ -113,8 +115,8 @@ begin
 
     Arithmetic_Logic_Unit_inst: entity work.Arithmetic_Logic_Unit(A_Arithmetic_Logic_Unit)
     port map(
-        alu_source_a 	=> internal_reg_data1,
-        alu_source_b 	=> internal_reg_data2,
+        alu_source_a 	=> internal_alu_source_a,
+        alu_source_b 	=> internal_alu_source_b,
         alu_opcode 		=> internal_alu_opcode,
         result 			=> internal_result,
         result_low 		=> internal_result_low,
@@ -157,7 +159,7 @@ begin
         ready 					=> internal_data_memory_ready,
         write_data_enable 		=> internal_mem_write,
         data_address_in 		=> internal_data_address_out,
-        data_in 				=> internal_data_memory_in,
+        data_in 				=> internal_result,
         data_out 				=> internal_data_memory_out
     );
 	
@@ -194,6 +196,8 @@ begin
 			if	internal_data_memory_ready = '1' and internal_regfile_ready = '1' and internal_pc_ready = '1' and internal_ins_memory_ready = '1' and internal_cu_ready = '1' then
 				
 			end if;
+			
+			
 		end if;
 	end process;
 	
