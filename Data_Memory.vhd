@@ -15,9 +15,9 @@ end Data_Memory;
 
 architecture A_Data_Memory of Data_Memory is
 	
-	type data_memory_type is array (0 to 255) of std_logic_vector(31 downto 0);
+	type data_memory_type is array (0 to 65535) of std_logic_vector(31 downto 0);
 	signal data_memory : data_memory_type := (
-		0 => X"00000011", -- 17 en decimal
+		0 => X"0000000A", -- 10 en decimal
 		1 => X"00000019", -- 25 en decimal
 		2 => X"00000004", -- 4 en decimal
 		3 => X"0000000A", -- 10 en decimal

@@ -99,7 +99,7 @@ begin
         read_reg1  	=> internal_src_reg,
         read_reg2  	=> internal_trg_reg,
         write_reg  	=> internal_des_reg,
-        write_data 	=> internal_write_data,
+        write_data 	=> internal_result,
         reg_data1  	=> internal_alu_source_a,
         reg_data2  	=> internal_alu_source_b
     );
