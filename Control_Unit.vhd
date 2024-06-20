@@ -41,7 +41,7 @@ begin
     begin
         if reset = '1' then
             state <= idle;
-		elsif rising_edge(clk) then
+		elsif rising_edge(clk) or falling_edge(clk) then
 			state <= next_state;
 			previous_state <= state;
 			
@@ -77,13 +77,14 @@ begin
 				next_state <= decode2;
 				
 			when decode2 =>
+			--branch (6);reg_write (5);mem_write(4);mem_read(3); memto_reg(2);IO_read(1);IO_write(0);
 				case internal_opcode is
 					when "000001" => -- ALU operation
-						internal_control_signals <= "0100000";
+						internal_control_signals <= "0000010";
 						update_counter <= 2;
 						next_state <= decode_alu;
 					when "000010" => -- LOAD
-						internal_control_signals <= "0110100";
+						internal_control_signals <= "0011010";
 						update_counter <= 2;
 						next_state <= decode3;
 					when "000011" => -- LOADI
@@ -98,12 +99,12 @@ begin
 						internal_control_signals <= "0100000";
 						update_counter <= 2;
 						next_state <= decode3;
-					when "000111" => -- MOVE
-						internal_control_signals <= "1111000";
+					when "000111" => -- MOVE REG
+						internal_control_signals <= "0100000";
 						update_counter <= 2;
 						next_state <= decode3;
 					when "001000" => -- BNZ
-						internal_control_signals <= "1000000";
+						internal_control_signals <= "0000001";
 						update_counter <= 2;
 						next_state <= decode3;
 					when "001001" => -- HALT
@@ -117,6 +118,11 @@ begin
 					when "001011" => -- STORE_IO
 						IO_addr <= (others => '0');
 						internal_control_signals <= "0010010";
+						update_counter <= 2;
+						next_state <= decode3;
+					when "001100" => -- NOP
+						IO_addr <= (others => '0');
+						internal_control_signals <= "0000000";
 						update_counter <= 2;
 						next_state <= decode3;
 					when others =>
@@ -162,6 +168,11 @@ begin
 						update_counter <= 3;
 						next_state <= ready_state;
 					when "001011" => -- STORE_IO
+						IO_addr <= (others => '0');
+						internal_alu_opcode <= "1000";
+						update_counter <= 3;
+						next_state <= ready_state;
+					when "001100" => -- NOP
 						IO_addr <= (others => '0');
 						internal_alu_opcode <= "1000";
 						update_counter <= 3;
@@ -219,7 +230,10 @@ begin
 				else
 					internal_ready <= '0';
 				end if;
-				next_state <= idle;
+				
+				if internal_instruction /= instruction_in then
+					next_state <= idle;
+				end if;
 				
 			when others =>
 				next_state <= idle;
