@@ -61,14 +61,10 @@ architecture A_Central_Processing_Unit of Central_Processing_Unit is
     signal internal_cu_ready					: std_logic := '0';
     signal internal_ins_memory_ready			: std_logic := '0';
 	
-	type state_type is (cu_state, pc_state, alu_state, store_state, reg_state, halt_state, update_state);
+	type state_type is (instruction_state, cu_state, pc_state, alu_state, store_state, reg_state, halt_state, update_state);
 	signal state, next_state, previous_state: state_type;
 
-begin
-
-	internal_data_address_in <= "0000000000000000" & internal_immediate;
-	internal_instruction_in <= internal_data_instruction_memory_out;
-	internal_instruction_address_in <= internal_pc_address_out;
+begin	
 
     Control_Unit_inst: entity work.Control_Unit(A_Control_Unit)
     port map(
@@ -159,6 +155,7 @@ begin
     Data_Memory_inst: entity work.Data_Memory(A_Data_Memory)
     port map(
         clk 					=> clk,
+		reset					=> reset,
         data_register_ready 	=> internal_data_register_ready,
         ready 					=> internal_data_memory_ready,
         write_data_enable 		=> internal_mem_write,
@@ -170,7 +167,7 @@ begin
 	process(clk)
 	begin
 		if reset = '1' then
-			state <= cu_state;
+			state <= instruction_state;
 		elsif rising_edge(clk) or falling_edge(clk) then
 			state <= next_state;
 			previous_state <= state;
@@ -181,56 +178,87 @@ begin
 	begin
 		case state is
 		
-			when cu_state =>
-				if internal_cu_ready = '1' then
-					next_state <= reg_state;
+			when pc_state =>
+			
+			if internal_branch = '1' then
+				internal_pc_address_in <= "000000" & internal_jump_address;
+				next_state <= instruction_state;
+			else
+				internal_pc_address_in <= std_logic_vector(unsigned(internal_pc_address_out) + 1);
+				next_state <= instruction_state;
+			end if;
+	
+			when instruction_state =>
+				if internal_pc_ready = '1' then
+					internal_instruction_address_in <= internal_pc_address_out;
+					internal_instruction_in <= internal_data_instruction_memory_out;
 				else
 					next_state <= update_state;
 				end if;
 				
-			when reg_state => 
-				internal_read_reg1 <= internal_src_reg;
-				internal_read_reg2 <= internal_trg_reg;
-				
-				if internal_memto_reg = '1' then
-					internal_write_data <= internal_data_memory_out;
-					internal_write_reg <= internal_trg_reg;
-					next_state <= alu_state;
+				if internal_ins_memory_ready = '1' then
+					next_state <= cu_state;
 				else
-					internal_write_data <= internal_result;
-					internal_write_reg <= internal_des_reg;
-					next_state <= alu_state;
+					next_state <= update_state;
 				end if;
 				
+			when cu_state =>
 				
+				if internal_cu_ready = '1' then
+					next_state <= reg_state;
+					internal_data_address_in <= "0000000000000000" & internal_immediate;
+				else
+					next_state <= update_state;
+				end if;
+				
+			when reg_state =>
+				
+				if internal_cu_ready = '1' and internal_data_memory_ready = '1' then
+					internal_read_reg1 <= internal_src_reg;
+					internal_read_reg2 <= internal_trg_reg;
+					
+					if internal_memto_reg = '1' then
+						internal_write_data <= internal_data_memory_out;
+						internal_write_reg <= internal_trg_reg;
+						
+						if internal_regfile_ready = '1' then
+							next_state <= alu_state;
+						else
+							next_state <= update_state;
+						end if;
+					else
+						if internal_regfile_ready = '1' then
+							next_state <= alu_state;
+						else
+							next_state <= update_state;
+						end if;
+					end if;
+					
+				else
+					next_state <= update_state;
+				end if;
 			
 			when alu_state =>
 				
 				if internal_regfile_ready = '1' then
 					internal_alu_source_a <= internal_reg_data1;
 					internal_alu_source_b <= internal_reg_data2;
-					next_state <= pc_state;
+					next_state <= store_state;
 				else
 					next_state <= update_state;
 				end if;
 			
 			when store_state =>
-			
-			when pc_state =>
-			
-			if	internal_data_memory_ready = '1' and internal_regfile_ready = '1' and internal_pc_ready = '1' and internal_ins_memory_ready = '1' and internal_cu_ready = '1' then
-				if internal_branch = '1' then
-					internal_pc_address_in <= "000000" & internal_jump_address;
-					next_state <= cu_state;
+				
+				if internal_memto_reg = '1' then
+					internal_write_data <= internal_data_memory_out;
+					internal_write_reg <= internal_trg_reg;
+					next_state <= pc_state;
 				else
-					internal_pc_address_in <= std_logic_vector(unsigned(internal_pc_address_out) + 1);
-					next_state <= cu_state;
+					internal_write_data <= internal_result;
+					internal_write_reg <= internal_des_reg;
+					next_state <= pc_state;
 				end if;
-			else
-				next_state <= update_state;
-			end if;
-			
-			
 			
 			when update_state =>
 				if internal_opcode = "001001" then

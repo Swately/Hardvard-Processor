@@ -16,39 +16,82 @@ architecture A_Register_File of Register_File is
     type Register_Array is array(0 to 31) of std_logic_vector(31 downto 0);
     signal register_bank: Register_Array;
 	signal internal_ready: std_logic := '0';
-	signal internal_reg_data: std_logic_vector(31 downto 0) := (others => 'X');
+	signal internal_write_data: std_logic_vector(31 downto 0) := (others => 'X');
+	signal internal_reg_data1: std_logic_vector(31 downto 0) := (others => 'X');
+	signal internal_reg_data2: std_logic_vector(31 downto 0) := (others => 'X');
+	signal internal_write_reg: std_logic_vector(4 downto 0) := (others => 'X');
+	signal internal_read_reg1: std_logic_vector(4 downto 0) := (others => 'X');
+	signal internal_read_reg2: std_logic_vector(4 downto 0) := (others => 'X');
+	
+	type state_type is (set_state, write_state, data_out_state, reset_state);
+	signal state, next_state, previous_state: state_type;
 begin
-    process(clk, reset)
+	
+    process(clk, reset, write_data, write_reg, read_reg1, read_reg2)
     begin
         if reset = '1' then
-            for i in 0 to 31 loop
-                register_bank(i) <= (others => '0');
-            end loop;
-        elsif rising_edge(clk) then
-            if reg_write = '1' then
-                register_bank(to_integer(unsigned(write_reg))) <= write_data;
-				internal_reg_data <= write_data;
-            end if;
+			state <= reset_state;
+        elsif rising_edge(clk) or falling_edge(clk) then
+           state <= next_state;
+		   previous_state <= state;
+		   
+		   if internal_write_data /= write_data or internal_write_reg /= write_reg or internal_read_reg1 /= read_reg1 or internal_read_reg2 /= read_reg2 then
+				state <= set_state;
+		   end if;
         end if;
     end process;
 	
-	process(clk, reset)
+	process(state, write_data, write_reg, read_reg1, read_reg2)
+		variable ready_count : integer;
 	begin
-		if reset = '1' then
-			internal_ready <= '0';
-		elsif falling_edge(clk) then
-			internal_ready <= '1';
-			if reg_write = '1' then
-                if internal_reg_data /= write_data then
-					internal_ready <= '0';
+		case state is
+		
+			when reset_state =>
+				for i in 0 to 31 loop
+					register_bank(i) <= (others => '0');
+				end loop;
+				next_state <= set_state;
+				
+			when set_state =>
+				internal_write_data <= write_data;
+				internal_write_reg <= write_reg;
+				internal_read_reg1 <= read_reg1;
+				internal_read_reg2 <= read_reg2;
+				ready_count := 1;
+				next_state <= write_state;
+				
+			when write_state =>
+			
+				if internal_write_data = write_data and internal_write_reg = write_reg and internal_read_reg1 = read_reg1 and internal_read_reg2 = read_reg2 then
+					if reg_write = '1' then
+						register_bank(to_integer(unsigned(internal_write_reg))) <= internal_write_data;
+					end if;
+					next_state <= data_out_state;
+					ready_count := 2;
 				else
-					internal_reg_data <= (others => 'X');
-					internal_ready <= '1';
+					next_state <= set_state;
 				end if;
-            end if;
+
+			when data_out_state =>
+				internal_reg_data1 <= register_bank(to_integer(unsigned(internal_read_reg1)));
+				internal_reg_data2 <= register_bank(to_integer(unsigned(internal_read_reg2)));
+				ready_count := 3;
+				next_state <= set_state;
+				
+			when others =>
+				next_state <= set_state;
+
+		end case;
+				
+		if ready_count = 3 then
+			internal_ready <= '1';
+		else
+			internal_ready <= '0';
 		end if;
 	end process;
-    reg_data1 <= register_bank(to_integer(unsigned(read_reg1)));
-    reg_data2 <= register_bank(to_integer(unsigned(read_reg2)));
+	
+	reg_data1 <= internal_reg_data1;
+    reg_data2 <= internal_reg_data1;
 	ready <= internal_ready;
+	
 end A_Register_File;

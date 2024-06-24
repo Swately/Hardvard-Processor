@@ -18,7 +18,7 @@ begin
 	process(alu_source_a, alu_source_b, alu_opcode)
 		variable temp_result		: signed(32 downto 0) := (others => '0');
 		variable temp_result_mul	: signed(63 downto 0) := (others => '0');
-		variable parity_count 		:  integer;
+		variable parity_count 		: integer;
 	begin
 	
 		if alu_source_a /= internal_a or alu_source_b /= internal_b then

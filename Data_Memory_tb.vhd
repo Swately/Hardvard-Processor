@@ -41,6 +41,7 @@ begin
 	Data_Memory_inst: entity work.Data_Memory(A_Data_Memory)
     port map(
         clk => clk,
+		reset => reset,
 		ready => data_memory_ready,
 		data_register_ready => data_register_ready,
 		write_data_enable => write_data_enable,
