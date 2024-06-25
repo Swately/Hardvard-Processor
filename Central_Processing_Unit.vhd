@@ -85,7 +85,7 @@ begin
         immediate   	=> internal_immediate,
         alu_opcode  	=> internal_alu_opcode,
         src_reg     	=> internal_src_reg,
-        trg_reg     	=> internal_trg_reg,
+        trg_reg     	=> internal_trg_reg,    
         des_reg     	=> internal_des_reg,
         IO_data     	=> internal_IO_data
     );
@@ -160,7 +160,7 @@ begin
         ready 					=> internal_data_memory_ready,
         write_data_enable 		=> internal_mem_write,
         data_address_in 		=> internal_data_address_out,
-        data_in 				=> internal_result,
+        data_in 				=> internal_data_memory_in,
         data_out 				=> internal_data_memory_out
     );
 	
@@ -203,62 +203,46 @@ begin
 				end if;
 				
 			when cu_state =>
-				
+                
+                internal_data_address_in <= "0000000000000000" & internal_immediate;
+                internal_read_reg1 <= internal_src_reg;
+                internal_read_reg2 <= internal_trg_reg;
+
 				if internal_cu_ready = '1' then
-					next_state <= reg_state;
-					internal_data_address_in <= "0000000000000000" & internal_immediate;
-				else
-					next_state <= update_state;
-				end if;
-				
-			when reg_state =>
-				
-				if internal_cu_ready = '1' and internal_data_memory_ready = '1' then
-					internal_read_reg1 <= internal_src_reg;
-					internal_read_reg2 <= internal_trg_reg;
-					
-					if internal_memto_reg = '1' then
-						internal_write_data <= internal_data_memory_out;
-						internal_write_reg <= internal_trg_reg;
-						
-						if internal_regfile_ready = '1' then
-							next_state <= alu_state;
-						else
-							next_state <= update_state;
-						end if;
-					else
-						if internal_regfile_ready = '1' then
-							next_state <= alu_state;
-						else
-							next_state <= update_state;
-						end if;
-					end if;
-					
+					next_state <= alu_state;
 				else
 					next_state <= update_state;
 				end if;
 			
 			when alu_state =>
 				
-				if internal_regfile_ready = '1' then
-					internal_alu_source_a <= internal_reg_data1;
-					internal_alu_source_b <= internal_reg_data2;
-					next_state <= store_state;
-				else
-					next_state <= update_state;
-				end if;
+                if internal_memto_reg = '1' then
+                    internal_alu_source_a <= internal_data_memory_out;
+                    internal_alu_source_b <= (others => 'X');
+                    internal_write_reg <= internal_trg_reg;
+                    internal_write_data <= internal_result;
+                    
+                    
+                    if internal_regfile_ready = '1' then
+                        next_state <= store_state;
+                    else
+                        next_state <= update_state;
+                    end if;
+                else
+                    internal_alu_source_a <= internal_reg_data1;
+                    internal_alu_source_b <= internal_reg_data2;
+                    internal_write_reg <= internal_des_reg;
+                    internal_write_data <= internal_result;
+                        
+                    if internal_regfile_ready = '1' then
+                        next_state <= store_state;
+                    else
+                        next_state <= update_state;
+                    end if;
+                end if;
 			
 			when store_state =>
-				
-				if internal_memto_reg = '1' then
-					internal_write_data <= internal_data_memory_out;
-					internal_write_reg <= internal_trg_reg;
-					next_state <= pc_state;
-				else
-					internal_write_data <= internal_result;
-					internal_write_reg <= internal_des_reg;
-					next_state <= pc_state;
-				end if;
+                next_state <= pc_state;
 			
 			when update_state =>
 				if internal_opcode = "001001" then

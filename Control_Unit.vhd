@@ -18,7 +18,7 @@ end Control_Unit;
 
 architecture A_Control_Unit of Control_Unit is
 	
-	type state_type is (idle, decode1, decode2, decode3, decode_alu, ready_state);
+	type state_type is (instruction_state, decode1, decode2, decode3, decode_alu, ready_state);
 	signal state, next_state, previous_state: state_type;
 	
     signal function_signal         : std_logic_vector(5 downto 0) := (others => '0');
@@ -40,13 +40,13 @@ begin
 	process(clk, reset)
     begin
         if reset = '1' then
-            state <= idle;
+            state <= instruction_state;
 		elsif rising_edge(clk) or falling_edge(clk) then
 			state <= next_state;
 			previous_state <= state;
 			
 			if instruction_in /= internal_instruction then
-				state <= idle;
+				state <= instruction_state;
 			end if;
 		end if;
 		
@@ -56,7 +56,7 @@ begin
     begin
         case state is
 			
-			when idle =>
+			when instruction_state =>
 				internal_ready <= '0';
 				update_counter <= 0;
 				internal_instruction <= instruction_in;
@@ -232,11 +232,11 @@ begin
 				end if;
 				
 				if internal_instruction /= instruction_in then
-					next_state <= idle;
+					next_state <= instruction_state;
 				end if;
 				
 			when others =>
-				next_state <= idle;
+				next_state <= instruction_state;
 				
 		end case;
 		
