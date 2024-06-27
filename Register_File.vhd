@@ -23,7 +23,7 @@ architecture A_Register_File of Register_File is
 	signal internal_read_reg1: std_logic_vector(4 downto 0) := (others => 'X');
 	signal internal_read_reg2: std_logic_vector(4 downto 0) := (others => 'X');
 	
-	type state_type is (set_state, write_state, data_out_state, reset_state);
+	type state_type is (set_state, write_state, data_out_state, reset_state, update_state);
 	signal state, next_state, previous_state: state_type;
 begin
 	
@@ -41,7 +41,7 @@ begin
         end if;
     end process;
 	
-	process(state, write_data, write_reg, read_reg1, read_reg2)
+	process(state, write_data, write_reg, read_reg1, read_reg2, reg_write)
 		variable ready_count : integer;
 	begin
 		case state is
@@ -76,7 +76,10 @@ begin
 				internal_reg_data1 <= register_bank(to_integer(unsigned(internal_read_reg1)));
 				internal_reg_data2 <= register_bank(to_integer(unsigned(internal_read_reg2)));
 				ready_count := 3;
-				next_state <= set_state;
+				next_state <= update_state;
+
+			when update_state =>
+				next_state <= previous_state;
 				
 			when others =>
 				next_state <= set_state;
@@ -91,7 +94,7 @@ begin
 	end process;
 	
 	reg_data1 <= internal_reg_data1;
-    reg_data2 <= internal_reg_data1;
+    reg_data2 <= internal_reg_data2;
 	ready <= internal_ready;
 	
 end A_Register_File;

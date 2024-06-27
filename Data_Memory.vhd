@@ -18,9 +18,9 @@ architecture A_Data_Memory of Data_Memory is
 	type state_type is (set_state, write_read_state, data_out_state, reset_state, update_state);
 	signal state, next_state, previous_state: state_type;
 	
-	type data_memory_type is array (0 to 65535) of std_logic_vector(31 downto 0);
+	type data_memory_type is array (0 to 64000) of std_logic_vector(31 downto 0);
 	signal data_memory : data_memory_type := (
-		0 => X"0000000A", -- 10 en decimal
+		0 => X"00000000", -- 0 en decimal
 		1 => X"00000019", -- 25 en decimal
 		2 => X"00000004", -- 4 en decimal
 		3 => X"0000000A", -- 10 en decimal
@@ -43,7 +43,7 @@ architecture A_Data_Memory of Data_Memory is
 
 begin
 
-	process(clk, reset, data_register_ready)
+	process(clk, reset, data_register_ready, data_address_in, data_in)
 	begin
 		if reset = '1' then
 			state <= set_state;

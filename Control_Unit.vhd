@@ -77,7 +77,7 @@ begin
 				next_state <= decode2;
 				
 			when decode2 =>
-			--branch (6);reg_write (5);mem_write(4);mem_read(3); memto_reg(2);IO_read(1);IO_write(0);
+			--IO_write(0); IO_read(1); memto_reg(2); mem_read(3); mem_write(4); reg_write(5); branch(6);
 				case internal_opcode is
 					when "000001" => -- ALU operation
 						internal_control_signals <= "0000010";
@@ -103,7 +103,7 @@ begin
 						internal_control_signals <= "0100000";
 						update_counter <= 2;
 						next_state <= decode3;
-					when "001000" => -- BNZ
+					when "001000" => -- BEQ
 						internal_control_signals <= "0000001";
 						update_counter <= 2;
 						next_state <= decode3;
@@ -111,8 +111,8 @@ begin
 						internal_control_signals <= "0000000";
 						update_counter <= 2;
 						next_state <= decode3;
-					when "001010" => -- STORE
-						internal_control_signals <= "0010000";
+					when "001010" => -- BNE
+						internal_control_signals <= "0000001";
 						update_counter <= 2;
 						next_state <= decode3;
 					when "001011" => -- STORE_IO
@@ -155,7 +155,7 @@ begin
 						internal_alu_opcode <= "1000";
 						update_counter <= 3;
 						next_state <= ready_state;
-					when "001000" => -- BNZ
+					when "001000" => -- BEQ
 						internal_alu_opcode <= "1000";
 						update_counter <= 3;
 						next_state <= ready_state;
@@ -163,7 +163,7 @@ begin
 						internal_alu_opcode <= "1000";
 						update_counter <= 3;
 						next_state <= ready_state;
-					when "001010" => -- STORE
+					when "001010" => -- BNE
 						internal_alu_opcode <= "1000";
 						update_counter <= 3;
 						next_state <= ready_state;

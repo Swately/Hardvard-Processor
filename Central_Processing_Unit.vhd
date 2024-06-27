@@ -171,6 +171,15 @@ begin
 		elsif rising_edge(clk) or falling_edge(clk) then
 			state <= next_state;
 			previous_state <= state;
+
+            if internal_pc_address_out /= internal_instruction_address_in or internal_ins_memory_ready = '0' then
+                state <= instruction_state;
+            end if;
+
+            if internal_regfile_ready = '0' then
+                state <= previous_state;
+            end if;
+
 		end if;
 	end process;
 	
@@ -181,11 +190,36 @@ begin
 			when pc_state =>
 			
 			if internal_branch = '1' then
-				internal_pc_address_in <= "000000" & internal_jump_address;
-				next_state <= instruction_state;
+                if internal_opcode = "001000" then
+                    if internal_reg_data1 = internal_reg_data2 then
+                        internal_pc_address_in <= "0000000000000000" & internal_immediate;
+                    else
+                        internal_pc_address_in <= std_logic_vector(unsigned(internal_pc_address_out) + 1);
+                    end if;
+                end if;
+
+                if internal_opcode = "001010" then
+                    if internal_reg_data1 /= internal_reg_data2 then
+                        internal_pc_address_in <= "0000000000000000" & internal_immediate;
+                    else
+                        internal_pc_address_in <= std_logic_vector(unsigned(internal_pc_address_out) + 1);
+                    end if;
+                end if;
+
+				if internal_ins_memory_ready = '1' and internal_pc_ready = '1' and internal_regfile_ready = '1' then
+                    next_state <= instruction_state;
+                else
+                    next_state <= update_state;
+                end if;
+
 			else
+                
 				internal_pc_address_in <= std_logic_vector(unsigned(internal_pc_address_out) + 1);
-				next_state <= instruction_state;
+				if internal_ins_memory_ready = '1' and internal_pc_ready = '1' and internal_regfile_ready = '1' then
+                    next_state <= instruction_state;
+                else
+                    next_state <= update_state;
+                end if;
 			end if;
 	
 			when instruction_state =>
@@ -204,52 +238,69 @@ begin
 				
 			when cu_state =>
                 
-                internal_data_address_in <= "0000000000000000" & internal_immediate;
-                internal_read_reg1 <= internal_src_reg;
-                internal_read_reg2 <= internal_trg_reg;
+            internal_read_reg1 <= internal_src_reg;
+            internal_read_reg2 <= internal_trg_reg;
 
-				if internal_cu_ready = '1' then
-					next_state <= alu_state;
-				else
-					next_state <= update_state;
-				end if;
+            if internal_mem_read = '1' then
+                internal_data_address_in <= "0000000000000000" & internal_immediate;
+            end if;
+
+
+            if internal_cu_ready = '1' and internal_data_memory_ready = '1' then
+                if internal_opcode = "001001" then
+                    next_state <= halt_state;
+                else
+                    next_state <= alu_state;
+                end if;
+            else
+                next_state <= update_state;
+            end if;
 			
 			when alu_state =>
 				
-                if internal_memto_reg = '1' then
-                    internal_alu_source_a <= internal_data_memory_out;
-                    internal_alu_source_b <= (others => 'X');
-                    internal_write_reg <= internal_trg_reg;
-                    internal_write_data <= internal_result;
-                    
-                    
-                    if internal_regfile_ready = '1' then
-                        next_state <= store_state;
+                if internal_cu_ready = '1' and internal_data_memory_ready = '1' then
+                    if internal_memto_reg = '1' then
+                        internal_alu_source_a <= internal_data_memory_out;
+                        internal_alu_source_b <= (others => 'X');
+                        if internal_reg_write = '1' then
+                            internal_write_reg <= internal_trg_reg;
+                            internal_write_data <= internal_result;
+                        else
+                            internal_write_reg <= (others => '0');
+                        end if;
+
+                        if internal_regfile_ready = '1' then
+                            next_state <= store_state;
+                        else
+                            next_state <= update_state;
+                        end if;
+
                     else
-                        next_state <= update_state;
+                        internal_alu_source_a <= internal_reg_data1;
+                        internal_alu_source_b <= internal_reg_data2;
+                        if internal_reg_write = '1' then
+                            internal_write_reg <= internal_des_reg;
+                            internal_write_data <= internal_result;
+                        else
+                            internal_write_reg <= (others => '0');
+                        end if;
+
+                        if internal_regfile_ready = '1' then
+                            next_state <= store_state;
+                        else
+                            next_state <= update_state;
+                        end if;
                     end if;
                 else
-                    internal_alu_source_a <= internal_reg_data1;
-                    internal_alu_source_b <= internal_reg_data2;
-                    internal_write_reg <= internal_des_reg;
-                    internal_write_data <= internal_result;
-                        
-                    if internal_regfile_ready = '1' then
-                        next_state <= store_state;
-                    else
-                        next_state <= update_state;
-                    end if;
+                    next_state <= cu_state;
                 end if;
+                
 			
 			when store_state =>
                 next_state <= pc_state;
-			
+                
 			when update_state =>
-				if internal_opcode = "001001" then
-					next_state <= halt_state;
-				else
-					next_state <= previous_state;
-				end if;
+				next_state <= previous_state;
 				
 			when halt_state =>
 				next_state <= halt_state;
