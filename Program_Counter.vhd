@@ -25,7 +25,7 @@ begin
     begin
         if reset = '1' then
             state <= address_in_state;
-        elsif rising_edge(clk) or falling_edge(clk) then
+        elsif rising_edge(clk) then
             state <= next_state;
             previous_state <= state;
 

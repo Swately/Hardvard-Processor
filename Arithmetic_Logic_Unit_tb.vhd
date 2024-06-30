@@ -18,7 +18,7 @@ architecture A_Arithmetic_Logic_Unit_tb of Arithmetic_Logic_Unit_tb is
 	signal result_low		: std_logic_vector(31 downto 0) := (others => '0');
 	signal result_high		: std_logic_vector(31 downto 0) := (others => '0');
 	signal zero				: std_logic := '0';
-	signal sign				: std_logic := '0';
+	signal sign_flag				: std_logic := '0';
 	signal carry			: std_logic := '0';
 	signal overflow			: std_logic := '0';
 	signal parity			: std_logic := '0';
@@ -37,7 +37,7 @@ begin
 		result_low 		=> result_low,
 		result_high 	=> result_high,
 		zero 			=> zero,
-		sign 			=> sign,
+		sign_flag 		=> sign_flag,
 		carry 			=> carry,
 		overflow 		=> overflow,
 		parity			=> parity
@@ -80,7 +80,7 @@ begin
 		report "result = " & integer'image(to_integer(unsigned(result)));
 		report "zero = " & std_logic'image(zero);
 		report "carry = " & std_logic'image(carry);
-		report "sign = " & std_logic'image(sign);
+		report "sign_flag = " & std_logic'image(sign_flag);
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 1----------");
@@ -95,7 +95,7 @@ begin
 		report "result = " & integer'image(to_integer(unsigned(result)));
 		report "zero = " & std_logic'image(zero);
 		report "carry = " & std_logic'image(carry);
-		report "sign = " & std_logic'image(sign);
+		report "sign_flag = " & std_logic'image(sign_flag);
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 2----------");
@@ -110,7 +110,7 @@ begin
 		report "result = " & integer'image(to_integer(unsigned(result)));
 		report "zero = " & std_logic'image(zero);
 		report "carry = " & std_logic'image(carry);
-		report "sign = " & std_logic'image(sign);
+		report "sign_flag = " & std_logic'image(sign_flag);
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 3----------");
@@ -125,7 +125,7 @@ begin
 		report "result = " & integer'image(to_integer(unsigned(result)));
 		report "zero = " & std_logic'image(zero);
 		report "carry = " & std_logic'image(carry);
-		report "sign = " & std_logic'image(sign);
+		report "sign_flag = " & std_logic'image(sign_flag);
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 4----------");
@@ -140,7 +140,7 @@ begin
 		report "result = " & to_string(result);
 		report "zero = " & std_logic'image(zero);
 		report "carry = " & std_logic'image(carry);
-		report "sign = " & std_logic'image(sign);
+		report "sign_flag = " & std_logic'image(sign_flag);
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 5----------");
@@ -155,7 +155,7 @@ begin
 		report "result = " & to_string(result);
 		report "zero = " & std_logic'image(zero);
 		report "carry = " & std_logic'image(carry);
-		report "sign = " & std_logic'image(sign);
+		report "sign_flag = " & std_logic'image(sign_flag);
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 6----------");
@@ -170,7 +170,7 @@ begin
 		report "result = " & to_string(result);
 		report "zero = " & std_logic'image(zero);
 		report "carry = " & std_logic'image(carry);
-		report "sign = " & std_logic'image(sign);
+		report "sign_flag = " & std_logic'image(sign_flag);
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 7----------");
@@ -194,7 +194,7 @@ begin
 		report "result = " & integer'image(to_integer(unsigned(result)));
 		report "zero = " & std_logic'image(zero);
 		report "carry = " & std_logic'image(carry);
-		report "sign = " & std_logic'image(sign);
+		report "sign_flag = " & std_logic'image(sign_flag);
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 9----------");
@@ -209,7 +209,7 @@ begin
 		report "result = " & integer'image(to_integer(unsigned(result)));
 		report "zero = " & std_logic'image(zero);
 		report "carry = " & std_logic'image(carry);
-		report "sign = " & std_logic'image(sign);
+		report "sign_flag = " & std_logic'image(sign_flag);
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 10----------");
@@ -224,7 +224,7 @@ begin
 		report "result = " & integer'image(to_integer(unsigned(result)));
 		report "zero = " & std_logic'image(zero);
 		report "carry = " & std_logic'image(carry);
-		report "sign = " & std_logic'image(sign);
+		report "sign_flag = " & std_logic'image(sign_flag);
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 11----------");
@@ -239,7 +239,7 @@ begin
 		report "result = " & integer'image(to_integer(unsigned(result)));
 		report "zero = " & std_logic'image(zero);
 		report "carry = " & std_logic'image(carry);
-		report "sign = " & std_logic'image(sign);
+		report "sign_flag = " & std_logic'image(sign_flag);
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 12----------");
@@ -254,7 +254,7 @@ begin
 		report "result = " & integer'image(to_integer(unsigned(result)));
 		report "zero = " & std_logic'image(zero);
 		report "carry = " & std_logic'image(carry);
-		report "sign = " & std_logic'image(sign);
+		report "sign_flag = " & std_logic'image(sign_flag);
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 13----------");

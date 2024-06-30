@@ -6,7 +6,7 @@ entity Data_Memory is
 	port(
 		clk, write_data_enable, data_register_ready, reset: in std_logic;
 		ready: out std_logic;
-		data_address_in: in std_logic_vector(31 downto 0);
+		data_address_in: in std_logic_vector(7 downto 0);
 		data_in: in std_logic_vector(31 downto 0);
 		data_out: out std_logic_vector(31 downto 0) := (others => '0')
 	);
@@ -18,7 +18,7 @@ architecture A_Data_Memory of Data_Memory is
 	type state_type is (set_state, write_read_state, data_out_state, reset_state, update_state);
 	signal state, next_state, previous_state: state_type;
 	
-	type data_memory_type is array (0 to 64000) of std_logic_vector(31 downto 0);
+	type data_memory_type is array (0 to 255) of std_logic_vector(31 downto 0);
 	signal data_memory : data_memory_type := (
 		0 => X"00000000", -- 0 en decimal
 		1 => X"00000019", -- 25 en decimal
@@ -28,7 +28,7 @@ architecture A_Data_Memory of Data_Memory is
 		5 => X"00000001", -- 1 en decimal
 		6 => X"00000002", -- 2 en decimal
 		7 => X"FFFFFFFF", -- -1 en decimal
-		8 => X"00000007", -- 7 en decimal
+		8 => X"000003E8", -- 1000 en decimal
 		9 => X"05F5E100", -- 1M en decimal
 		10 => X"0000048D", -- valor de x
 		11 => X"FFFFF863", -- valor de y
@@ -38,7 +38,7 @@ architecture A_Data_Memory of Data_Memory is
 	);
 	
 	signal internal_data_in: std_logic_vector(31 downto 0) := (others => 'X');
-	signal internal_address_in: std_logic_vector(31 downto 0) := (others => 'X');
+	signal internal_address_in: std_logic_vector(7 downto 0) := (others => 'X');
 	signal internal_ready: std_logic := '0';
 
 begin
@@ -47,7 +47,7 @@ begin
 	begin
 		if reset = '1' then
 			state <= set_state;
-		elsif rising_edge(clk) or falling_edge(clk) then
+		elsif rising_edge(clk) then
 			state <= next_state;
 			previous_state <= state;
 			
@@ -62,6 +62,7 @@ begin
 	begin
 		case state is
 			when set_state =>
+
 				if data_register_ready = '1' then
 					internal_data_in <= data_in;
 					internal_address_in <= data_address_in;

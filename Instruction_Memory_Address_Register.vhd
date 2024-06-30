@@ -6,8 +6,8 @@ entity Instruction_Memory_Address_Register is
 	port(
 		clk, reset: in std_logic;
 		ready: out std_logic;
-		instruction_address_in: in std_logic_vector(31 downto 0);
-		instruction_address_out: out std_logic_vector(31 downto 0)
+		instruction_address_in: in std_logic_vector(7 downto 0);
+		instruction_address_out: out std_logic_vector(7 downto 0)
 	);
 end Instruction_Memory_Address_Register;
 
@@ -16,8 +16,8 @@ architecture A_Instruction_Memory_Address_Register of Instruction_Memory_Address
 	type state_type is (address_in_state, address_out_state, update_state);
 	signal state, next_state, previous_state: state_type;
 
-	signal internal_address_in: std_logic_vector(31 downto 0) := (others => 'X');
-	signal internal_address_out: std_logic_vector(31 downto 0) := (others => 'X');
+	signal internal_address_in: std_logic_vector(7 downto 0) := (others => 'X');
+	signal internal_address_out: std_logic_vector(7 downto 0) := (others => 'X');
 	signal internal_ready: std_logic := '0';
 begin
 
@@ -25,7 +25,7 @@ begin
 	begin
 		if reset = '1' then
 			state <= address_in_state;
-		elsif rising_edge(clk) or falling_edge(clk) then
+		elsif rising_edge(clk) then
 			state <= next_state;
 			previous_state <= state;
 

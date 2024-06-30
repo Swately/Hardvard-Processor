@@ -4,16 +4,18 @@ use ieee.numeric_std.all;
 
 entity Central_Processing_Unit is
     port(
-        clk, reset: in std_logic
+        clk, reset: in std_logic;
+        alu_result: out std_logic_vector(31 downto 0)
     );
 end Central_Processing_Unit;
 
 architecture A_Central_Processing_Unit of Central_Processing_Unit is
     
     -- Internal Signals
+    
     signal internal_pc_address_in				: std_logic_vector(31 downto 0) := (others => '0');
-    signal internal_data_address_in				: std_logic_vector(31 downto 0) := (others => '0');
-    signal internal_instruction_address_in		: std_logic_vector(31 downto 0) := (others => '0');
+    signal internal_data_address_in				: std_logic_vector(7 downto 0) := (others => '0');
+    signal internal_instruction_address_in		: std_logic_vector(7 downto 0) := (others => '0');
     signal internal_instruction_in				: std_logic_vector(31 downto 0) := (others => '0');
     signal internal_alu_source_a				: std_logic_vector(31 downto 0) := (others => '0');
     signal internal_alu_source_b				: std_logic_vector(31 downto 0) := (others => '0');
@@ -28,8 +30,8 @@ architecture A_Central_Processing_Unit of Central_Processing_Unit is
     signal internal_alu_opcode					: std_logic_vector(3 downto 0) := (others => '0');
     signal internal_immediate					: std_logic_vector(15 downto 0) := (others => '0');
     signal internal_pc_address_out				: std_logic_vector(31 downto 0) := (others => '0');
-    signal internal_data_address_out			: std_logic_vector(31 downto 0) := (others => '0');
-    signal internal_instruction_address_out		: std_logic_vector(31 downto 0) := (others => '0');
+    signal internal_data_address_out			: std_logic_vector(7 downto 0) := (others => '0');
+    signal internal_instruction_address_out		: std_logic_vector(7 downto 0) := (others => '0');
     signal internal_data_memory_out				: std_logic_vector(31 downto 0) := (others => '0');
     signal internal_data_instruction_memory_out	: std_logic_vector(31 downto 0) := (others => '0');
     signal internal_reg_data1					: std_logic_vector(31 downto 0) := (others => '0');
@@ -37,10 +39,10 @@ architecture A_Central_Processing_Unit of Central_Processing_Unit is
     signal internal_result						: std_logic_vector(31 downto 0) := (others => '0');
     signal internal_result_low					: std_logic_vector(31 downto 0) := (others => '0');
     signal internal_result_high					: std_logic_vector(31 downto 0) := (others => '0');
-    signal internal_opcode						: std_logic_vector(5 downto 0) := (others => '0');
     signal internal_IO_addr						: std_logic_vector(31 downto 0) := (others => '0');
     signal internal_IO_data						: std_logic_vector(31 downto 0) := (others => '0');
 	signal internal_jump_address				: std_logic_vector(25 downto 0) := (others => '0');
+    signal internal_opcode						: std_logic_vector(5 downto 0) := (others => '0');
     signal internal_zero						: std_logic := '0';
     signal internal_sign						: std_logic := '0';
     signal internal_carry						: std_logic := '0';
@@ -60,12 +62,13 @@ architecture A_Central_Processing_Unit of Central_Processing_Unit is
     signal internal_pc_ready					: std_logic := '0';
     signal internal_cu_ready					: std_logic := '0';
     signal internal_ins_memory_ready			: std_logic := '0';
+    signal internal_dmode                       : std_logic := '1';
 	
 	type state_type is (instruction_state, cu_state, pc_state, alu_state, store_state, reg_state, halt_state, update_state);
 	signal state, next_state, previous_state: state_type;
 
-begin	
-
+begin
+	
     Control_Unit_inst: entity work.Control_Unit(A_Control_Unit)
     port map(
         clk         	=> clk,
@@ -122,7 +125,7 @@ begin
         result_low 		=> internal_result_low,
         result_high 	=> internal_result_high,
         zero 			=> internal_zero,
-        sign 			=> internal_sign,
+        sign_flag 		=> internal_sign,
         carry 			=> internal_carry,
         overflow 		=> internal_overflow,
         parity			=> internal_parity
@@ -168,11 +171,11 @@ begin
 	begin
 		if reset = '1' then
 			state <= instruction_state;
-		elsif rising_edge(clk) or falling_edge(clk) then
+		elsif rising_edge(clk) then
 			state <= next_state;
 			previous_state <= state;
 
-            if internal_pc_address_out /= internal_instruction_address_in or internal_ins_memory_ready = '0' then
+            if internal_pc_address_out(7 downto 0) /= internal_instruction_address_in or internal_ins_memory_ready = '0' then
                 state <= instruction_state;
             end if;
 
@@ -183,7 +186,7 @@ begin
 		end if;
 	end process;
 	
-	process(state)
+	process(state, internal_opcode, internal_branch)
 	begin
 		case state is
 		
@@ -224,7 +227,7 @@ begin
 	
 			when instruction_state =>
 				if internal_pc_ready = '1' then
-					internal_instruction_address_in <= internal_pc_address_out;
+					internal_instruction_address_in <= internal_pc_address_out (7 downto 0);
 					internal_instruction_in <= internal_data_instruction_memory_out;
 				else
 					next_state <= update_state;
@@ -242,7 +245,7 @@ begin
             internal_read_reg2 <= internal_trg_reg;
 
             if internal_mem_read = '1' then
-                internal_data_address_in <= "0000000000000000" & internal_immediate;
+                internal_data_address_in <= internal_immediate(7 downto 0);
             end if;
 
 
@@ -261,7 +264,7 @@ begin
                 if internal_cu_ready = '1' and internal_data_memory_ready = '1' then
                     if internal_memto_reg = '1' then
                         internal_alu_source_a <= internal_data_memory_out;
-                        internal_alu_source_b <= (others => 'X');
+                        internal_alu_source_b <= (others => '0');
                         if internal_reg_write = '1' then
                             internal_write_reg <= internal_trg_reg;
                             internal_write_data <= internal_result;
@@ -310,9 +313,9 @@ begin
 				next_state <= halt_state;
 				
 		end case;
-	end process;
-	
-	
 
+	end process;
+
+    alu_result <= internal_result;
 
 end A_Central_Processing_Unit;
