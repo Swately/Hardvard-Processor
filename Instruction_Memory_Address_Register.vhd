@@ -16,8 +16,8 @@ architecture A_Instruction_Memory_Address_Register of Instruction_Memory_Address
 	type state_type is (address_in_state, address_out_state, update_state);
 	signal state, next_state, previous_state: state_type;
 
-	signal internal_address_in: std_logic_vector(7 downto 0) := (others => 'X');
-	signal internal_address_out: std_logic_vector(7 downto 0) := (others => 'X');
+	signal internal_address_in: std_logic_vector(7 downto 0) := (others => '0');
+	signal internal_address_out: std_logic_vector(7 downto 0) := (others => '0');
 	signal internal_ready: std_logic := '0';
 begin
 

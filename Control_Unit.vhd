@@ -25,13 +25,13 @@ architecture A_Control_Unit of Control_Unit is
     signal shift_amount            : std_logic_vector(4 downto 0) := (others => '0');
     signal internal_jump_address   : std_logic_vector(25 downto 0) := (others => '0');
     signal internal_opcode         : std_logic_vector(5 downto 0) := (others => '0');
-    signal internal_alu_opcode     : std_logic_vector(3 downto 0) := (others => 'X');
-    signal internal_instruction    : std_logic_vector(31 downto 0) := (others => 'X');
-    signal internal_control_signals : std_logic_vector(6 downto 0) := (others => 'X');
-	signal internal_src_reg	: std_logic_vector(4 downto 0) := (others => 'X');
-	signal internal_trg_reg	: std_logic_vector(4 downto 0) := (others => 'X');
-	signal internal_des_reg	: std_logic_vector(4 downto 0) := (others => 'X');
-	signal internal_immediate		: std_logic_vector(15 downto 0) := (others => 'X');
+    signal internal_alu_opcode     : std_logic_vector(3 downto 0) := "1000";
+    signal internal_instruction    : std_logic_vector(31 downto 0) := (others => '0');
+    signal internal_control_signals : std_logic_vector(6 downto 0) := (others => '0');
+	signal internal_src_reg	: std_logic_vector(4 downto 0) := (others => '0');
+	signal internal_trg_reg	: std_logic_vector(4 downto 0) := (others => '0');
+	signal internal_des_reg	: std_logic_vector(4 downto 0) := (others => '0');
+	signal internal_immediate		: std_logic_vector(15 downto 0) := (others => '0');
 	signal internal_ready					 : std_logic := '0';
 	signal internal_alu_opcode_ready         : std_logic := '0';
 	signal internal_instruction_ready          : std_logic := '0';
@@ -77,7 +77,11 @@ begin
 				internal_jump_address    <= internal_instruction(25 downto 0);
 				shift_amount    <= internal_instruction(10 downto 6); 
 				ready_count := 2;
-				next_state <= decode2;
+				if ready_count = 2 then
+					next_state <= decode2;
+				else
+					next_state <= update_state;
+				end if;
 				
 			when decode2 =>
 			--IO_write(0); IO_read(1); memto_reg(2); mem_read(3); mem_write(4); reg_write(5); branch(6);

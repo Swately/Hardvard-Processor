@@ -18,7 +18,7 @@ architecture A_Arithmetic_Logic_Unit_tb of Arithmetic_Logic_Unit_tb is
 	signal result_low		: std_logic_vector(31 downto 0) := (others => '0');
 	signal result_high		: std_logic_vector(31 downto 0) := (others => '0');
 	signal zero				: std_logic := '0';
-	signal sign_flag				: std_logic := '0';
+	signal sign_flag		: std_logic := '0';
 	signal carry			: std_logic := '0';
 	signal overflow			: std_logic := '0';
 	signal parity			: std_logic := '0';
@@ -57,26 +57,18 @@ begin
 	begin
 		report("----------Starting simulation----------");
 		
-		report("----------Initialize inputs----------");
-		reset <= '1';
-		alu_source_a <= (others => '0');
-		alu_source_b <= (others => '0');
-		alu_opcode <= (others => '0');
-        wait for 20 ns;
-		report("----------End of initialize inputs----------");
-		
-		report("----------Release reset----------");
-		reset <= '0';
-        wait for 10 ns;
-		report("----------End of release reset----------");
 		
 		report("----------Test 1: Addition----------");
+		wait for clk_period;
 		alu_source_a <= X"000003EB";
 		alu_source_b <= X"00000007";
 		alu_opcode <= "0000";
 		wait for clk_period;
+		wait for clk_period;
+		wait for clk_period;
 		report "a = " & integer'image(to_integer(unsigned(alu_source_a)));
 		report "b = " & integer'image(to_integer(unsigned(alu_source_b)));
+		wait for clk_period;
 		report "result = " & integer'image(to_integer(unsigned(result)));
 		report "zero = " & std_logic'image(zero);
 		report "carry = " & std_logic'image(carry);
@@ -84,6 +76,7 @@ begin
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 1----------");
+
 		
 		report("----------Test 2: Substraction----------");
 		alu_source_a <= X"000003EB";
@@ -99,6 +92,25 @@ begin
 		report "overflow = " & std_logic'image(overflow);
 		wait for 10 ns;
 		report("----------End of Test 2----------");
+
+		report("----------Test 1.1: Addition----------");
+		wait for clk_period;
+		alu_source_a <= X"000003EB";
+		alu_source_b <= X"00000007";
+		alu_opcode <= "0000";
+		wait for clk_period;
+		wait for clk_period;
+		wait for clk_period;
+		report "a = " & integer'image(to_integer(unsigned(alu_source_a)));
+		report "b = " & integer'image(to_integer(unsigned(alu_source_b)));
+		wait for clk_period;
+		report "result = " & integer'image(to_integer(unsigned(result)));
+		report "zero = " & std_logic'image(zero);
+		report "carry = " & std_logic'image(carry);
+		report "sign_flag = " & std_logic'image(sign_flag);
+		report "overflow = " & std_logic'image(overflow);
+		wait for 10 ns;
+		report("----------End of Test 1.1----------");
 		
 		report("----------Test 3: Multiplication----------");
 		alu_source_a <= X"000003EB";

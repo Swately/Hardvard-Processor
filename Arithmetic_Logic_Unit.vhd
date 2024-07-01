@@ -12,84 +12,67 @@ entity Arithmetic_Logic_Unit is
 end Arithmetic_Logic_Unit;
 
 architecture A_Arithmetic_Logic_Unit of Arithmetic_Logic_Unit is
-	signal internal_result 				: std_logic_vector(31 downto 0) := (others => 'X');
-	signal internal_result_low 			: std_logic_vector(31 downto 0) := (others => 'X');
-	signal internal_result_high 		: std_logic_vector(31 downto 0) := (others => 'X');
-	signal internal_alu_source_a 		: std_logic_vector(31 downto 0) := (others => 'X');
-	signal internal_alu_source_b 		: std_logic_vector(31 downto 0) := (others => 'X');
-	signal internal_alu_opcode 			: std_logic_vector(3 downto 0) := (others => 'X');
+	signal internal_result 				: std_logic_vector(31 downto 0);
+	signal internal_result_add			: std_logic_vector(32 downto 0) := (others => '0');
+	signal internal_result_sub			: std_logic_vector(32 downto 0) := (others => '0');
+	signal internal_result_low 			: std_logic_vector(31 downto 0) := (others => '0');
+	signal internal_result_high 		: std_logic_vector(31 downto 0) := (others => '0');
+	signal internal_alu_source_a 		: std_logic_vector(31 downto 0) := (others => '0');
+	signal internal_alu_source_b 		: std_logic_vector(31 downto 0) := (others => '0');
+	signal internal_alu_opcode 			: std_logic_vector(3 downto 0) := (others => '0');
 
 	signal internal_zero 			: std_logic := '0';
 	signal internal_sign_flag 		: std_logic := '0';
-	signal internal_carry 			: std_logic := '0';
+	signal internal_carry_add 		: std_logic := '0';
+	signal internal_carry_sub 		: std_logic := '0';
+	signal internal_carry			: std_logic := '0';
 	signal internal_overflow 		: std_logic := '0';
 	signal internal_parity 			: std_logic := '0';
+
+	component Full_Adder_32bits
+		port(
+			entry_a, entry_b: in std_logic_vector(31 downto 0);
+			mode: in std_logic;
+			result: out std_logic_vector(32 downto 0);
+			carry_out : out std_logic
+		);
+	end component;
 
 begin
 	
 	internal_alu_source_a <= alu_source_a;
 	internal_alu_source_b <= alu_source_b;
 	internal_alu_opcode <= alu_opcode;
+
+	Full_Adder_Add: Full_Adder_32bits
+		port map(
+			entry_a => internal_alu_source_a,
+			entry_b => internal_alu_source_b,
+			mode => '0',
+			result => internal_result_add,
+			carry_out => internal_carry_add
+		);
+
+		Full_Adder_Sub: Full_Adder_32bits
+		port map(
+			entry_a => internal_alu_source_a,
+			entry_b => internal_alu_source_b,
+			mode => '1',
+			result => internal_result_sub,
+			carry_out => internal_carry_sub
+		);
+	
 	
 	process(internal_alu_source_a, internal_alu_source_b, internal_alu_opcode)
-		variable temp_result		: signed(32 downto 0) := (others => '0');
-		variable temp_result_mul	: signed(63 downto 0) := (others => '0');
 	begin
 		case internal_alu_opcode is
 			when "0000" =>
-				temp_result := signed('0' & internal_alu_source_a) + signed('0' & internal_alu_source_b);
-				internal_result <= std_logic_vector(temp_result(31 downto 0));
-				internal_sign_flag <= temp_result(31);
-				internal_carry <= temp_result(32);
-
-				if (internal_alu_source_a(31) = internal_alu_source_b(31)) and (internal_alu_source_a(31) /= temp_result(31)) then
-					internal_overflow <= '1';
-				else
-					internal_overflow <= '0';
-				end if;
+				internal_result <= internal_result_add(31 downto 0);
+				internal_carry <= internal_carry_add;
 
 			when "0001" =>
-				temp_result := signed('0' & internal_alu_source_a) - signed('0' & internal_alu_source_b);
-				internal_result <= std_logic_vector(temp_result(31 downto 0));
-				internal_sign_flag <= temp_result(31);
-				internal_carry <= temp_result(32);
-
-				if (internal_alu_source_a(31) = internal_alu_source_b(31)) and (internal_alu_source_a(31) /= temp_result(31)) then
-					internal_overflow <= '1';
-				else
-					internal_overflow <= '0';
-				end if;
-
-			when "0010" =>
-				temp_result_mul := signed(internal_alu_source_a) * signed(internal_alu_source_b);
-				internal_result <= std_logic_vector(temp_result_mul(31 downto 0));
-				internal_result_low <= std_logic_vector(temp_result_mul(31 downto 0));
-				internal_result_high <= std_logic_vector(temp_result_mul(63 downto 32));
-				internal_carry <= '0';
-				internal_sign_flag <= temp_result_mul(31);
-
-				if temp_result_mul(63 downto 32) /= "00000000000000000000000000000000" then
-					internal_overflow <= '1';
-				else
-					internal_overflow <= '0';
-				end if;
-
-				--when "0011" =>
-				--	if internal_alu_source_b /= "00000000000000000000000000000000" then
-				--		temp_result := signed(internal_alu_source_a) / signed(internal_alu_source_b);
-				--		internal_result <= std_logic_vector(temp_result(31 downto 0));
-				--		internal_sign_flag <= temp_result(31);
-
-				--		if internal_alu_source_a = X"80000000" and internal_alu_source_b = X"FFFFFFFF" then
-				--			internal_overflow <= '1';
-				--		else
-				--			internal_overflow <= '0';
-				--		end if;
-				--	else
-				--		internal_result <= (others => '0');
-				--			internal_overflow <= '0';
-				--	end if;
-				--	internal_carry <= '0';
+				internal_result <= internal_result_sub(31 downto 0);
+				internal_carry <= internal_carry_sub;
 				
 			when "0100" =>
 				internal_result <= internal_alu_source_a and internal_alu_source_b;
@@ -116,6 +99,7 @@ begin
 		else
 			internal_zero <= '0';
 		end if;
+
 	end process;
 
 	result <= internal_result;

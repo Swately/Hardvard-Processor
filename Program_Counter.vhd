@@ -16,8 +16,8 @@ architecture A_Program_Counter of Program_Counter is
     type state_type is (address_in_state, address_out_state, update_state);
     signal state, next_state, previous_state: state_type;
 
-    signal internal_pc_in: std_logic_vector(31 downto 0) := (others => 'X');
-    signal internal_pc_out: std_logic_vector(31 downto 0) := (others => 'X');
+    signal internal_pc_in: std_logic_vector(31 downto 0) := (others => '0');
+    signal internal_pc_out: std_logic_vector(31 downto 0) := (others => '0');
     signal internal_ready: std_logic := '0';
 begin
     
@@ -42,7 +42,7 @@ begin
         case state is
 
             when address_in_state =>
-            internal_pc_in <= pc_address_in;
+                internal_pc_in <= pc_address_in;
                 ready_count := 1;
                 next_state <= address_out_state;
 

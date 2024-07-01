@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 
 entity Data_Memory is
 	port(
-		clk, write_data_enable, data_register_ready, reset: in std_logic;
+		clk, write_data_enable, read_data_enable, data_register_ready, reset: in std_logic;
 		ready: out std_logic;
 		data_address_in: in std_logic_vector(7 downto 0);
 		data_in: in std_logic_vector(31 downto 0);
@@ -37,8 +37,8 @@ architecture A_Data_Memory of Data_Memory is
 		others => (others => '0')
 	);
 	
-	signal internal_data_in: std_logic_vector(31 downto 0) := (others => 'X');
-	signal internal_address_in: std_logic_vector(7 downto 0) := (others => 'X');
+	signal internal_data_in: std_logic_vector(31 downto 0) := (others => '0');
+	signal internal_address_in: std_logic_vector(7 downto 0) := (others => '0');
 	signal internal_ready: std_logic := '0';
 
 begin
@@ -66,12 +66,12 @@ begin
 				if data_register_ready = '1' then
 					internal_data_in <= data_in;
 					internal_address_in <= data_address_in;
-					ready_count := 1;
 					next_state <= write_read_state;
 				else
 					next_state <= update_state;
 				end if;
-				
+				ready_count := 1;
+
 			when write_read_state =>
 				if write_data_enable = '1' then
 					data_memory(to_integer(unsigned(internal_address_in))) <= internal_data_in;
@@ -80,7 +80,11 @@ begin
 				next_state <= data_out_state;
 			
 			when data_out_state =>
-				data_out <= data_memory(to_integer(unsigned(internal_address_in)));
+				if read_data_enable = '1' then
+					data_out <= data_memory(to_integer(unsigned(internal_address_in)));
+				else
+					data_out <= (others => '0');
+				end if;
 				ready_count := 3;
 				next_state <= update_state;
 				

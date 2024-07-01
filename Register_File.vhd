@@ -16,12 +16,12 @@ architecture A_Register_File of Register_File is
     type Register_Array is array(0 to 31) of std_logic_vector(31 downto 0);
     signal register_bank: Register_Array;
 	signal internal_ready: std_logic := '0';
-	signal internal_write_data: std_logic_vector(31 downto 0) := (others => 'X');
-	signal internal_reg_data1: std_logic_vector(31 downto 0) := (others => 'X');
-	signal internal_reg_data2: std_logic_vector(31 downto 0) := (others => 'X');
-	signal internal_write_reg: std_logic_vector(4 downto 0) := (others => 'X');
-	signal internal_read_reg1: std_logic_vector(4 downto 0) := (others => 'X');
-	signal internal_read_reg2: std_logic_vector(4 downto 0) := (others => 'X');
+	signal internal_write_data: std_logic_vector(31 downto 0) := (others => '0');
+	signal internal_reg_data1: std_logic_vector(31 downto 0) := (others => '0');
+	signal internal_reg_data2: std_logic_vector(31 downto 0) := (others => '0');
+	signal internal_write_reg: std_logic_vector(4 downto 0) := (others => '0');
+	signal internal_read_reg1: std_logic_vector(4 downto 0) := (others => '0');
+	signal internal_read_reg2: std_logic_vector(4 downto 0) := (others => '0');
 	
 	type state_type is (set_state, write_state, data_out_state, reset_state, update_state);
 	signal state, next_state, previous_state: state_type;
@@ -38,6 +38,10 @@ begin
 		   if internal_write_data /= write_data or internal_write_reg /= write_reg or internal_read_reg1 /= read_reg1 or internal_read_reg2 /= read_reg2 then
 				state <= set_state;
 		   end if;
+		   
+		   if internal_write_data /= write_data and internal_write_reg = write_reg and internal_read_reg1 = read_reg1 and internal_read_reg2 = read_reg2 then
+				state <= set_state;
+			end if;
         end if;
     end process;
 	
@@ -50,6 +54,7 @@ begin
 				for i in 0 to 31 loop
 					register_bank(i) <= (others => '0');
 				end loop;
+				ready_count := 0;
 				next_state <= set_state;
 				
 			when set_state =>
