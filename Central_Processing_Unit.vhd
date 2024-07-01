@@ -329,17 +329,18 @@ begin
 				
 		end case;
         
-        alu_result <= internal_result;
-        synchronization_signals(0) <= internal_cu_ready;
-        synchronization_signals(1) <= internal_pc_ready;
-        synchronization_signals(2) <= internal_ins_memory_ready;
-        synchronization_signals(3) <= internal_regfile_ready;
-        synchronization_signals(4) <= internal_data_memory_ready;
-        src_reg <= internal_src_reg;
-        trg_reg <= internal_trg_reg;
-        des_reg <= internal_des_reg;
         
 	end process;
+
+    alu_result <= internal_result;
+    synchronization_signals(0) <= internal_cu_ready;
+    synchronization_signals(1) <= internal_pc_ready;
+    synchronization_signals(2) <= internal_ins_memory_ready;
+    synchronization_signals(3) <= internal_regfile_ready;
+    synchronization_signals(4) <= internal_data_memory_ready;
+    src_reg <= internal_src_reg;
+    trg_reg <= internal_trg_reg;
+    des_reg <= internal_des_reg;
 
 
 end A_Central_Processing_Unit;

@@ -27,7 +27,7 @@ begin
 	
 	Clock_Inst: entity work.Clock(A_Clock)
 		port map(
-			CLK_1Hz => internal_clk,
+			CLK_24Hz => internal_clk,
             CLK_400Hz => internal_clk_400Hz
 		);
 

@@ -47,7 +47,7 @@ begin
         end if;
     end process;
 	
-	process(state, write_data, write_reg, read_reg1, read_reg2, reg_write)
+	process(all)
 		variable ready_count : integer;
 	begin
 		case state is

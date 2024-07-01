@@ -10,11 +10,11 @@ architecture A_Instruction_Memory_tb of Instruction_Memory_tb is
 	--Inputs
 	signal clk						: std_logic := '0';
 	signal reset					: std_logic := '0';
-	signal instruction_address_in	: std_logic_vector(31 downto 0) := (others => '0');
+	signal instruction_address_in	: std_logic_vector(7 downto 0) := (others => '0');
 	
 	--Outputs
 	signal data_out					: std_logic_vector(31 downto 0) := (others => '0');
-	signal instruction_address_out	: std_logic_vector(31 downto 0) := (others => '0');
+	signal instruction_address_out	: std_logic_vector(7 downto 0) := (others => '0');
 	
 	-- Clock period definition
     constant clk_period : time := 5 ns;
@@ -64,13 +64,13 @@ begin
 		report("----------End of release reset----------");
 		
 		report("----------Test 1: Read instrction memory----------");
-		instruction_address_in <= X"00000001";
+		instruction_address_in <= "00000001";
 		wait for 10 ns;
 		report "data_out = " & to_string(data_out);
-		instruction_address_in <= X"0000000F";
+		instruction_address_in <= "00000011";
 		wait for 10 ns;
 		report "data_out = " & to_string(data_out);
-		instruction_address_in <= X"00000014";
+		instruction_address_in <= "00001010";
 		wait for 10 ns;
 		report "data_out = " & to_string(data_out);
 		report("----------End of Test 1----------");

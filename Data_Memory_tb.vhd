@@ -12,12 +12,13 @@ architecture A_Data_Memory_tb of Data_Memory_tb is
 	signal clk 					: std_logic := '0';
 	signal reset				: std_logic := '0';
 	signal write_data_enable	: std_logic := '0';
-	signal data_address_in		: std_logic_vector(31 downto 0) := (others => '0');
+	signal read_data_enable	: std_logic := '0';
+	signal data_address_in		: std_logic_vector(7 downto 0) := (others => '0');
 	signal data_in				: std_logic_vector(31 downto 0) := (others => '0');
 	
 	--Outputs
 	
-	signal data_address_out		: std_logic_vector(31 downto 0) := (others => '0');
+	signal data_address_out		: std_logic_vector(7 downto 0) := (others => '0');
 	signal data_out				: std_logic_vector(31 downto 0) := (others => '0');
 	
 	-- Clock period definition
@@ -26,6 +27,7 @@ architecture A_Data_Memory_tb of Data_Memory_tb is
 	--Control Signal
 	signal data_memory_ready    : std_logic := '0';
 	signal data_register_ready  : std_logic := '0';
+
 	
 begin
 
@@ -45,6 +47,7 @@ begin
 		ready => data_memory_ready,
 		data_register_ready => data_register_ready,
 		write_data_enable => write_data_enable,
+		read_data_enable => read_data_enable,
 		data_address_in => data_address_out,
 		data_in => data_in,
 		data_out => data_out
@@ -67,6 +70,7 @@ begin
 		report("----------Initialize inputs----------");
 		reset <= '1';
 		write_data_enable <= '0';
+		read_data_enable <= '0';
 		data_address_in <= (others => '0');
 		data_in <= (others => '0');
         wait for 20 ns;
@@ -80,8 +84,9 @@ begin
 		
 		report("----------Test 2: store data----------");
 		write_data_enable <= '1';
-		data_address_in <= X"00000009";
-		data_in <= X"0000000F";
+		read_data_enable <= '0';
+		data_address_in <= "00001001";
+		data_in <= X"00000A24";
 		wait for clk_period;
 		report "data out = " & integer'image(to_integer(unsigned(data_out)));
 		wait for 10 ns;
@@ -89,7 +94,8 @@ begin
 		
 		report("----------Test 1: read data----------");
 		write_data_enable <= '0';
-		data_address_in <= X"0000000A";
+		read_data_enable <= '1';
+		data_address_in <= "00001011";
 		wait for clk_period;
 		report "data out = " & integer'image(to_integer(unsigned(data_out)));
 		wait for 10 ns;
@@ -99,7 +105,8 @@ begin
 		
 		report("----------Test 3: read data----------");
 		write_data_enable <= '0';
-		data_address_in <= X"00000001";
+		read_data_enable <= '1';
+		data_address_in <= "00000001";
 		wait for clk_period;
 		report "data out = " & integer'image(to_integer(unsigned(data_out)));
 		wait for 10 ns;
@@ -107,7 +114,8 @@ begin
 		
 		report("----------Test 4: store data----------");
 		write_data_enable <= '1';
-		data_address_in <= X"00000001";
+		read_data_enable <= '0';
+		data_address_in <= "00000001";
 		data_in <= X"00000014";
 		wait for clk_period;
 		report "data out = " & integer'image(to_integer(unsigned(data_out)));
