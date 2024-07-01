@@ -23,7 +23,7 @@ architecture A_Register_File of Register_File is
 	signal internal_read_reg1: std_logic_vector(4 downto 0) := (others => '0');
 	signal internal_read_reg2: std_logic_vector(4 downto 0) := (others => '0');
 	
-	type state_type is (set_state, write_state, data_out_state, reset_state, update_state);
+	type state_type is (set_state, write_state, reset_state, update_state);
 	signal state, next_state, previous_state: state_type;
 begin
 	
@@ -35,12 +35,14 @@ begin
            state <= next_state;
 		   previous_state <= state;
 		   
-		   if internal_write_data /= write_data or internal_write_reg /= write_reg or internal_read_reg1 /= read_reg1 or internal_read_reg2 /= read_reg2 then
-				state <= set_state;
-		   end if;
-		   
-		   if internal_write_data /= write_data and internal_write_reg = write_reg and internal_read_reg1 = read_reg1 and internal_read_reg2 = read_reg2 then
-				state <= set_state;
+		   	if reg_write = '1' then
+				if internal_write_data /= write_data or internal_write_reg /= write_reg then
+					state <= set_state;
+				end if;
+			else
+				if internal_read_reg1 /= read_reg1 or internal_read_reg2 /= read_reg2 then
+					state <= set_state;
+				end if;
 			end if;
         end if;
     end process;
@@ -71,17 +73,14 @@ begin
 					if reg_write = '1' then
 						register_bank(to_integer(unsigned(internal_write_reg))) <= internal_write_data;
 					end if;
-					next_state <= data_out_state;
+
+					internal_reg_data1 <= register_bank(to_integer(unsigned(internal_read_reg1)));
+					internal_reg_data2 <= register_bank(to_integer(unsigned(internal_read_reg2)));
+					next_state <= update_state;
 					ready_count := 2;
 				else
 					next_state <= set_state;
 				end if;
-
-			when data_out_state =>
-				internal_reg_data1 <= register_bank(to_integer(unsigned(internal_read_reg1)));
-				internal_reg_data2 <= register_bank(to_integer(unsigned(internal_read_reg2)));
-				ready_count := 3;
-				next_state <= update_state;
 
 			when update_state =>
 				next_state <= previous_state;
@@ -91,7 +90,7 @@ begin
 
 		end case;
 				
-		if ready_count = 3 then
+		if ready_count = 2 then
 			internal_ready <= '1';
 		else
 			internal_ready <= '0';

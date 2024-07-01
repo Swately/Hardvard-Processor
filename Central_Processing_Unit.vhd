@@ -107,7 +107,7 @@ begin
         read_reg1  	=> internal_src_reg,
         read_reg2  	=> internal_trg_reg,
         write_reg  	=> internal_write_reg,
-        write_data 	=> internal_write_data,
+        write_data 	=> internal_result,
         reg_data1  	=> internal_reg_data1,
         reg_data2  	=> internal_reg_data2
     );
@@ -200,7 +200,7 @@ begin
 		end if;
 	end process;
 	
-	process(state, internal_opcode, internal_branch)
+	process(state)
 	begin
 		case state is
 		
@@ -264,8 +264,6 @@ begin
                         else
                             internal_write_reg <= (others => '0');
                         end if;
-                        
-
                     else
                         internal_alu_source_a <= internal_reg_data1;
                         internal_alu_source_b <= internal_reg_data2;
@@ -279,11 +277,7 @@ begin
                     if internal_opcode = "001001" then
                         next_state <= halt_state;
                     else
-                        if internal_regfile_ready = '1' then
-                            next_state <= alu_state;
-                        else
-                            next_state <= update_state;
-                        end if;
+                        next_state <= alu_state;
                     end if;
                 else
                     next_state <= update_state;
@@ -292,24 +286,36 @@ begin
 			
 			when alu_state =>
 
-                if internal_memto_reg = '1' then
-                    if internal_write_reg = internal_trg_reg then
-                        internal_write_data <= internal_result;
-                        next_state <= store_state;
+                if internal_cu_ready = '1' then
+                    if internal_memto_reg = '1' then
+                        if internal_write_reg = internal_trg_reg then
+                            next_state <= store_state;
+                        else
+                            next_state <= cu_state;
+                        end if;
                     else
-                        next_state <= cu_state;
+                        if internal_write_reg = internal_des_reg then
+                            next_state <= store_state;
+                        else
+                            next_state <= cu_state;
+                        end if;
                     end if;
                 else
-                    if internal_write_reg = internal_des_reg then
-                        internal_write_data <= internal_result;
-                        next_state <= store_state;
-                    else
-                        next_state <= cu_state;
-                    end if;
+                    next_state <= cu_state;
                 end if;
 
 			when store_state =>
-                next_state <= pc_state;
+                if internal_memto_reg = '1' then
+                    if internal_result /= internal_data_memory_out then
+                        next_state <= cu_state;
+                    else
+                        next_state <= pc_state;
+                    end if;
+                else
+                    next_state <= pc_state;
+                end if;
+
+                
                 
 			when update_state =>
 				next_state <= previous_state;
@@ -323,17 +329,17 @@ begin
 				
 		end case;
         
+        alu_result <= internal_result;
+        synchronization_signals(0) <= internal_cu_ready;
+        synchronization_signals(1) <= internal_pc_ready;
+        synchronization_signals(2) <= internal_ins_memory_ready;
+        synchronization_signals(3) <= internal_regfile_ready;
+        synchronization_signals(4) <= internal_data_memory_ready;
+        src_reg <= internal_src_reg;
+        trg_reg <= internal_trg_reg;
+        des_reg <= internal_des_reg;
         
 	end process;
-    
-    alu_result <= internal_result;
-    synchronization_signals(0) <= internal_cu_ready;
-    synchronization_signals(1) <= internal_pc_ready;
-    synchronization_signals(2) <= internal_ins_memory_ready;
-    synchronization_signals(3) <= internal_regfile_ready;
-    synchronization_signals(4) <= internal_data_memory_ready;
-    src_reg <= internal_src_reg;
-    trg_reg <= internal_trg_reg;
-    des_reg <= internal_des_reg;
+
 
 end A_Central_Processing_Unit;

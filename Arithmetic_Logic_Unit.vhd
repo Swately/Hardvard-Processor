@@ -17,6 +17,8 @@ architecture A_Arithmetic_Logic_Unit of Arithmetic_Logic_Unit is
 	signal internal_result_sub			: std_logic_vector(32 downto 0) := (others => '0');
 	signal internal_result_low 			: std_logic_vector(31 downto 0) := (others => '0');
 	signal internal_result_high 		: std_logic_vector(31 downto 0) := (others => '0');
+	signal internal_result_add_r		: std_logic_vector(31 downto 0) := (others => '0');
+	signal internal_result_sub_r		: std_logic_vector(31 downto 0) := (others => '0');
 	signal internal_alu_source_a 		: std_logic_vector(31 downto 0) := (others => '0');
 	signal internal_alu_source_b 		: std_logic_vector(31 downto 0) := (others => '0');
 	signal internal_alu_opcode 			: std_logic_vector(3 downto 0) := (others => '0');
@@ -43,6 +45,9 @@ begin
 	internal_alu_source_a <= alu_source_a;
 	internal_alu_source_b <= alu_source_b;
 	internal_alu_opcode <= alu_opcode;
+	internal_result_add_r <= internal_result_add(31 downto 0);
+	internal_result_sub_r <= internal_result_sub(31 downto 0);
+
 
 	Full_Adder_Add: Full_Adder_32bits
 		port map(
@@ -63,15 +68,15 @@ begin
 		);
 	
 	
-	process(internal_alu_source_a, internal_alu_source_b, internal_alu_opcode)
+	process(all)
 	begin
 		case internal_alu_opcode is
 			when "0000" =>
-				internal_result <= internal_result_add(31 downto 0);
+				internal_result <= internal_result_add_r;
 				internal_carry <= internal_carry_add;
 
 			when "0001" =>
-				internal_result <= internal_result_sub(31 downto 0);
+				internal_result <= internal_result_sub_r;
 				internal_carry <= internal_carry_sub;
 				
 			when "0100" =>
