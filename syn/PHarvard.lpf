@@ -1,0 +1,146 @@
+# PHarvard.lpf -- pin constraints for Board_MachXO2 on the MachXO2-7000HE
+# (TQFP-144), on the operator's custom I/O daughterboard.
+#
+# Silkscreen numbers == FPGA pin numbers, so LOCATE SITE takes the pin number
+# directly.
+#
+# PROVENANCE, because it decides how much to trust each line.
+#   [HW] exercised on this board during the Holith bring-up and confirmed by
+#        the operator. Taken from projects/holith/syn/seg7mux.tcl and
+#        projects/holith/boards/BOARD_PINMAP.md.
+#   [TX] transcribed from photographs of the board, never driven.
+#
+# Rewritten 2026-08-01 after cross-checking against Holith. Two real defects
+# were found and are fixed here:
+#
+#   1. The file still located LCD_RS/RW/E/D, which no longer exist as ports.
+#      map reported 13 semantic errors and carried on -- and `buttons` and
+#      `ext_osc`, which DO exist, had no LOCATE at all, so the tool placed them
+#      wherever it liked. That is exactly how the Holith blinky ended up on
+#      pin 89 instead of 55.
+#   2. The digit-select order was derived from the OLD Display.vhd. That file
+#      was rewritten to take BCD, and its sweep now shows the LEFTMOST digit
+#      when the select is "1000" -- the previous version showed the tens digit
+#      there. The four digits would have come out shuffled.
+
+# ---------------------------------------------------------------- clock
+# The internal oscillator, 2.08 MHz. Constraining it makes TRACE report a real
+# Fmax instead of letting it invent an auto-preference.
+#
+# The net is called "clk" after synthesis, not "OSC_Inst/OSC": the hierarchical
+# path is the VHDL name, and what survives into the netlist is the signal the
+# oscillator drives. Naming the source instance instead got
+# `matches no clock nets in the design` and the preference was silently
+# disabled -- so the timing report was still an auto-preference and looked fine.
+FREQUENCY NET "clk" 2.080000 MHz ;
+
+# ------------------------------------------------ 7-segment segments  [HW]
+# Display.vhd's table is {g,f,e,d,c,b,a}, so DISPLAY(0) is segment A.
+# Segments are ACTIVE HIGH on this board. Pin 86 is the decimal point and this
+# design does not drive it.
+LOCATE COMP "DISPLAY_0" SITE "77" ;   # A
+LOCATE COMP "DISPLAY_1" SITE "78" ;   # B
+LOCATE COMP "DISPLAY_2" SITE "81" ;   # C
+LOCATE COMP "DISPLAY_3" SITE "82" ;   # D
+LOCATE COMP "DISPLAY_4" SITE "83" ;   # E
+LOCATE COMP "DISPLAY_5" SITE "84" ;   # F
+LOCATE COMP "DISPLAY_6" SITE "85" ;   # G
+
+# ------------------------------------------- 7-segment digit commons  [HW]
+# One-hot, ACTIVE HIGH. D1=73 is the leftmost digit.
+#
+# The order below follows the CURRENT Display.vhd, which selects
+# digits(15 downto 12) -- the most significant nibble -- when sel = "1000".
+# So bit 3 drives the leftmost digit and the mapping is a plain descending
+# one. If the number still reads scrambled on the board, these four lines are
+# the only thing to touch.
+LOCATE COMP "DISPLAY_SELECTOR_3" SITE "73" ;   # D1, leftmost
+LOCATE COMP "DISPLAY_SELECTOR_2" SITE "74" ;   # D2
+LOCATE COMP "DISPLAY_SELECTOR_1" SITE "75" ;   # D3
+LOCATE COMP "DISPLAY_SELECTOR_0" SITE "76" ;   # D4, rightmost
+
+# ---------------------------------------------------------- inputs  [HW/TX]
+# reset on a DIP switch rather than a button: a switch can be held, and the
+# S1 bank (pins 1-4) is the one input path validated on hardware.
+LOCATE COMP "reset" SITE "1" ;                  # [HW] S1-1
+
+# Bring-up mode switch. Up: the display shows the processor's internal state
+# instead of what the program wrote. Same S1 bank, so it is a validated input.
+LOCATE COMP "dbg_mode" SITE "2" ;               # [HW] S1-2
+
+# The five tactile buttons. Sense was never established, so if the machine
+# behaves as though a button is stuck down, invert them in software before
+# touching the wiring.
+LOCATE COMP "buttons_0" SITE "109" ;   # [TX]
+LOCATE COMP "buttons_1" SITE "110" ;   # [HW] the middle button, named by the
+                                       #      operator 2026-08-01
+
+# SENSE MEASURED 2026-08-01 with sw/btntest.s, which put the raw register on
+# the display: resting 0000, pressed 0002, released 0000, repeatable. The
+# button is ACTIVE HIGH on bit 1. BOARD_PINMAP.md had recorded the sense as TBD
+# for all five, so this is the first one established.
+#
+# PULLMODE=DOWN, not UP. The test ran with an internal pull-up and the pin
+# still read zero at rest, which means something on the board holds it down and
+# the internal resistor was fighting it the whole time. Matching the board
+# instead of arguing with it costs nothing and leaves the level unambiguous.
+IOBUF PORT "buttons_1" PULLMODE=DOWN ;
+LOCATE COMP "buttons_2" SITE "111" ;   # [TX]
+LOCATE COMP "buttons_3" SITE "112" ;   # [TX]
+LOCATE COMP "buttons_4" SITE "114" ;   # [TX]
+
+# The second oscillator for the entropy experiment, fed in through the freed
+# character-LCD header. THIS PIN EXPECTS 3.3 V: the Arduino is a 5 V board and
+# needs the divider (1k series, 2k to ground) described in sw/../docs.
+LOCATE COMP "ext_osc" SITE "113" ;     # [TX] old LCD RS
+
+# ------------------------------------------------------------- LEDs  [HW/TX]
+# 55, 54, 52 and 50 are confirmed: the Holith bring-up drove them from the S1
+# switches and the operator saw them follow. The rest of the row is
+# transcribed from photographs.
+#
+# Those transcribed outputs are held to the WEAKEST drive the part offers. If
+# a pin number is wrong and an output lands on something the board already
+# drives -- a switch, a button -- the two fight, and 4 mA is a far gentler
+# fight than 24. It costs nothing here: these are LEDs on a board being looked
+# at by a person, not a bus that has to settle in nanoseconds.
+IOBUF PORT "synchronization_signals_0" DRIVE=4 ;
+IOBUF PORT "synchronization_signals_1" DRIVE=4 ;
+IOBUF PORT "synchronization_signals_2" DRIVE=4 ;
+IOBUF PORT "src_reg_led_2" DRIVE=4 ;
+IOBUF PORT "src_reg_led_3" DRIVE=4 ;
+IOBUF PORT "src_reg_led_4" DRIVE=4 ;
+IOBUF PORT "trg_reg_led_0" DRIVE=4 ;
+IOBUF PORT "trg_reg_led_1" DRIVE=4 ;
+IOBUF PORT "trg_reg_led_2" DRIVE=4 ;
+IOBUF PORT "trg_reg_led_3" DRIVE=4 ;
+IOBUF PORT "trg_reg_led_4" DRIVE=4 ;
+IOBUF PORT "des_reg_led_0" DRIVE=4 ;
+IOBUF PORT "des_reg_led_1" DRIVE=4 ;
+IOBUF PORT "des_reg_led_2" DRIVE=4 ;
+IOBUF PORT "des_reg_led_3" DRIVE=4 ;
+IOBUF PORT "des_reg_led_4" DRIVE=4 ;
+
+LOCATE COMP "synchronization_signals_0" SITE "59" ;   # [TX] CU ready
+LOCATE COMP "synchronization_signals_1" SITE "57" ;   # [TX] PC ready
+LOCATE COMP "synchronization_signals_2" SITE "56" ;   # [TX] fetch valid
+LOCATE COMP "synchronization_signals_3" SITE "54" ;   # [TX] regfile ready
+LOCATE COMP "synchronization_signals_4" SITE "55" ;   # [HW] data valid
+
+LOCATE COMP "src_reg_led_0" SITE "52" ;   # [TX]
+LOCATE COMP "src_reg_led_1" SITE "50" ;   # [TX]
+LOCATE COMP "src_reg_led_2" SITE "48" ;   # [TX]
+LOCATE COMP "src_reg_led_3" SITE "49" ;   # [TX]
+LOCATE COMP "src_reg_led_4" SITE "47" ;   # [TX]
+
+LOCATE COMP "trg_reg_led_0" SITE "45" ;   # [TX]
+LOCATE COMP "trg_reg_led_1" SITE "43" ;   # [TX]
+LOCATE COMP "trg_reg_led_2" SITE "42" ;   # [TX]
+LOCATE COMP "trg_reg_led_3" SITE "44" ;   # [TX]
+LOCATE COMP "trg_reg_led_4" SITE "39" ;   # [TX]
+
+LOCATE COMP "des_reg_led_0" SITE "91" ;   # [TX]
+LOCATE COMP "des_reg_led_1" SITE "92" ;   # [TX]
+LOCATE COMP "des_reg_led_2" SITE "93" ;   # [TX]
+LOCATE COMP "des_reg_led_3" SITE "94" ;   # [TX]
+LOCATE COMP "des_reg_led_4" SITE "96" ;   # [TX]

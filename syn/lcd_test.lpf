@@ -1,0 +1,44 @@
+# lcd_test.lpf -- pin constraints for Top_LCD_Test on the MachXO2-7000HE (TQFP-144).
+#
+# PURPOSE: this design exists to CONFIRM these pin numbers. They are transcribed
+# from the character-LCD header in ../../holith/boards/BOARD_PINMAP.md, where
+# they are explicitly marked "likely" -- deduced from the header sequence
+#
+#     VSS VCC V0 | 113 117 115 120 119 122 121 126 125 128 127 | A K
+#
+# and never exercised on hardware. If the screen comes up wrong, this file is
+# the first thing to edit.
+#
+# READING THE RESULT
+#   correct                 -> line 2 shows 0123456789ABCDEF
+#   line 2 shows garbage    -> D0..D7 are permuted; re-order the DATA sites
+#   row of black blocks     -> initialisation never landed; suspect RS or E
+#   blank, heartbeat blinks -> LCD power or contrast (V0 trimpot), not the FPGA
+#   blank, no heartbeat     -> the bitstream is not running; suspect reset sense
+#
+# The heartbeat LED is the discriminator: it is deliberately independent of the
+# LCD so a dead display can be told apart from a dead design.
+
+# Control lines
+LOCATE COMP "lcd_rs" SITE "113" ;
+LOCATE COMP "lcd_rw" SITE "117" ;
+LOCATE COMP "lcd_e"  SITE "115" ;
+
+# Data bus D0..D7
+LOCATE COMP "lcd_d_0" SITE "120" ;
+LOCATE COMP "lcd_d_1" SITE "119" ;
+LOCATE COMP "lcd_d_2" SITE "122" ;
+LOCATE COMP "lcd_d_3" SITE "121" ;
+LOCATE COMP "lcd_d_4" SITE "126" ;
+LOCATE COMP "lcd_d_5" SITE "125" ;
+LOCATE COMP "lcd_d_6" SITE "128" ;
+LOCATE COMP "lcd_d_7" SITE "127" ;
+
+# Reset button (active HIGH in this design) and the heartbeat LED.
+# Pin 55 is the one LED validated on hardware during the Holith bring-up.
+LOCATE COMP "reset"     SITE "109" ;
+LOCATE COMP "heartbeat" SITE "55" ;
+
+# The internal oscillator runs at 2.08 MHz here, so timing closure is not the
+# constraint; the frequency is stated so TRACE reports against something real.
+FREQUENCY NET "OSC_Inst/OSC" 2.080000 MHz ;
