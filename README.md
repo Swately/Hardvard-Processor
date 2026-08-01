@@ -11,6 +11,10 @@ operations are composed from simple ones rather than requested from the
 synthesiser. There is no multiplier circuit here. There is a multiply
 *routine*, made of adds and shifts, and it costs zero gates.
 
+`github.com/Swately/PHarvard` — renamed 2026-08-01 from `Hardvard-Processor`,
+which carried a typo. GitHub redirects the old URL, so existing links still
+resolve.
+
 ---
 
 ## State
